@@ -1,5 +1,4 @@
 #include "targ3_header.h"
-#include <stdio.h>
 
 void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* name, int quantity)
 {
@@ -13,13 +12,16 @@ void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* na
 			while (!strcmp(tempP->name, name))//loop till you reach the name we want to update its quantity
 				tempP = tempP->next;
 			if (tempP->quantity >= quantity)//check if we have enough of the item in our inventory
+			{
 				while (tempT->num != table_number)//run on all the tabels till we find the table with same serial number
 					tempT = tempT->next;//go to next table
-				new_product=Addtotable(tempT,tempP->name,tempP->quantity,tempP->price);//recieve junction of what we put on the table 
+				new_product = Addtotable(tempT, tempP->name, tempP->quantity, tempP->price);//recieve junction of what we put on the table 
 				//add products to the table(link list) in the style of head of list
 				new_product->next = tempT->order;
 				tempT->order = new_product;
 				printf("%d %s were added to table number %d", quantity, name, table_number);
+			}
+			printf("sorry there isnt enough %s in the kitchen", name);
 		}
 	}
 }
@@ -63,7 +65,6 @@ product* Addtotable(Ptable t, char* name, int quantity,int price)
 		Error_Msg("couldnt add new product name to table");
 	strcpy(temp->name,name);
 	return temp;
-
 }
 
 void AddItems(Pmanage kitchen, char* name, int quantity)
@@ -79,11 +80,8 @@ void AddItems(Pmanage kitchen, char* name, int quantity)
 			temp->quantity = quantity;//update quantity
 			printf("%d %s were added to the kitchen", quantity, name);
 		}
-	}
-	
-	
+	}	
 }
-
 void CreateProducts(FILE* in, Pmanage kitchen)
 {
 	product* temp;
@@ -93,10 +91,7 @@ void CreateProducts(FILE* in, Pmanage kitchen)
 	kitchen->size = 0;
 	//allocate memory and check if it's valid
 	if(!(temp=(product*)malloc(sizeof(product))))
-	{
 		Error_Msg("Could not allocate memory");
-	}
-
 	while (fscanf(in, "%s %d %d", &temp_name, &temp->price, &temp->quantity)!=EOF)//enter info from text file into temp
 	{
 		//check if our name and price and quantity are ok (not equal,not neg) if its ok we add to our link list
