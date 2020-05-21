@@ -16,50 +16,49 @@ void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* na
 				while (tempT->num != table_number)//run on all the tabels till we find the table with same serial number
 					tempT = tempT->next;//go to next table
 				new_product=Addtotable(tempT,tempP->name,tempP->quantity,tempP->price);//recieve junction of what we put on the table 
-				if (tempT->next == NULL&&tempT->before==NULL)//if its the first item on the table
-				{
-					new_product->next = table_manage->head;
-					table_manage->head = new_product;
-					table_manage->tail = new_product;
-				}
-				else//
-				{
-					new_product->next = table_manage->head;
-					table_manage->head->before = new_product;
-					table_manage->head = new_product;	
-				}
-				table_manage->head->before = NULL;
-
+				//add products to the table(link list) in the style of head of list
+				new_product->next = tempT->order;
+				tempT->order = new_product;
+				printf("%d %s were added to table number %d", quantity, name, table_number);
 		}
 	}
 }
 
-void CreateTables(FILE *in,Tmanage table_manage)
+void CreateTables(Tmanage table_manage,int num)
 {
-	int num,i;
+	int i;
 	Ptable temp;
+	//set by defualt to be null
 	table_manage->head = NULL;
 	table_manage->tail = NULL;
-	fscanf(in, "%d", &num);
 	for (i = 0; i < num; i++)
 	{
-		if (!(temp = (table*)malloc(sizeof(table))))
+		if (!(temp = (table*)malloc(sizeof(table))))//create a table(link list node)
 			Error_Msg("Could not allocate memory");
-		temp->next = table_manage->head;
-		temp->before = NULL;
-		//CHANGE TO ADD TO TAIL INSTEAD OF HEAD
-		if (table_manage->head != NULL)
-			table_manage->head->before = temp;
-		table_manage->head = temp;
+		temp->num = i + 1;//number of table
+		temp->order = NULL;//initialize order to null(no orders on table)
+		temp->next = NULL;//our tail next is always null
+		if (table_manage->head == NULL)//if its the first item in link list
+		{
+			table_manage->head = temp;//make it first item
+			temp->before = NULL;
+		}
+		else//if its not the first item in the list
+		{
+			table_manage->tail->next = temp;//attach to previous tail
+			temp->before = table_manage->tail;//attach the list to go backward
+		}
+		table_manage->tail = temp;//update the tail
 	}
 }
+//this func copys an item and we call the function to add that item to the table
 product* Addtotable(Ptable t, char* name, int quantity,int price)
 {
-	product* temp;
+	product* temp;//make a product
 	if(!(temp=(product*)malloc(sizeof(product))))
 		Error_Msg("couldnt add product to table");
-	temp->quantity=quantity;
-	temp->price=price;
+	temp->quantity=quantity;//updates it quantity 
+	temp->price=price;//update its price
 	if(!(temp->name=(char*)malloc(sizeof(char)*strlen(name+1))))
 		Error_Msg("couldnt add new product name to table");
 	strcpy(temp->name,name);
@@ -78,9 +77,10 @@ void AddItems(Pmanage kitchen, char* name, int quantity)
 			while (!strcmp(temp->name, name))//loop till you reach the name we want to update its quantity
 				temp = temp->next;
 			temp->quantity = quantity;//update quantity
+			printf("%d %s were added to the kitchen", quantity, name);
 		}
-		
 	}
+	
 	
 }
 
@@ -126,7 +126,8 @@ void CreateProducts(FILE* in, Pmanage kitchen)
 		}
 	}
 	free(temp);//free the one extra temp we have allocated
-	printf("All products have been registered");//CHECK IF WE NEED TO THROW THE PROGRAM IF PRODUCT IS NOT OK?
+	//printf("All products have been registered");//CHECK IF WE NEED TO THROW THE PROGRAM IF PRODUCT IS NOT OK?
+	printf("The kitchen has been created");
 }
 int check_price(int price)
 {
@@ -153,7 +154,7 @@ int check_name(Pmanage kitchen,char* name)
 		if (strcmp(temp->name, name) == 0)
 		{
 			return 0;//return 0 if strings are identical
-			Error_Msg("This name is exist on the list");
+			Error_Msg("We dont have %s ,sorry :(",name);
 		}
 	temp = temp->next;
 	}
