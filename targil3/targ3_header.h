@@ -22,8 +22,9 @@ typedef struct table
 	product* order;
 	int num;
 	int price;
-	table* next, *before;
-}table, * Ptable;
+	struct table* next,*before;
+	
+}table, *Ptable;
 
 typedef struct table_manage
 {

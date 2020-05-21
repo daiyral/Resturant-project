@@ -1,29 +1,63 @@
 #include "targ3_header.h"
 
+void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity)
+{
+	Ptable tempT;
+	product* tempP, *todelete,*before;
+	tempT = table_manage->head;//set a pointer to our table
+	while (tempT->num != table_number)//find the table that wants to remove an item
+		tempT = tempT->next;
+	tempP = tempT->order;//set our pointer to the head of the items we have on the table
+	while (strcmp(tempP->name, name) != 0)//find the item BEFORE the one we want to delete
+	{
+		before = tempP;//WE STOPPED HERE 
+		tempP = tempP->next;
+	}
+	if (quantity <= tempP->next->quantity)//check if the amount of quantity exists on the table
+	{
+		tempT->price -= tempP->next->price * quantity;//update the tables price
+		tempP->next->quantity -= quantity;//update the quantity of the order on the table
+		if (tempP->quantity == 0)//check if they returened all the orders of said item
+		{
+			todelete = tempP->next;//set to delete to what we want to remove
+			tempP->next = todelete ->next;//
+			free(todelete);
+
+		}
+	}
+	else
+		printf("there isnt %d %s on the table", quantity, name);	
+}
+
+
 void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* name, int quantity)
 {
 	product* tempP, * new_product;//tempP will point the kitchen list
-	table* tempT = table_manage->head;//tempT will point to table list
+	Ptable tempT = table_manage->head;//tempT will point to table list
 	tempP = kitchen->head;
-	if (check_name(kitchen, name))
+	if (!check_name(kitchen, name))
 	{
 		if (check_quantity(quantity))
 		{
-			while (!strcmp(tempP->name, name))//loop till you reach the name we want to update its quantity
+			while (strcmp(tempP->name, name)!=0)//loop till you reach the name we want to update its quantity
 				tempP = tempP->next;
 			if (tempP->quantity >= quantity)//check if we have enough of the item in our inventory
 			{
 				while (tempT->num != table_number)//run on all the tabels till we find the table with same serial number
 					tempT = tempT->next;//go to next table
-				new_product = Addtotable(tempT, tempP->name, tempP->quantity, tempP->price);//recieve junction of what we put on the table 
+				new_product = Addtotable(tempT, tempP->name, quantity, tempP->price);//recieve junction of what we put on the table 
 				//add products to the table(link list) in the style of head of list
 				new_product->next = tempT->order;
 				tempT->order = new_product;
-				printf("%d %s were added to table number %d", quantity, name, table_number);
+				tempT->price = new_product->price * new_product->quantity;//update the total price on the table
+				tempP->quantity -= quantity;//update the quantity of the item in our kitchen
+				printf("\n%d %s were added to table number %d", quantity, name, table_number);
 			}
-			printf("sorry there isnt enough %s in the kitchen", name);
+			printf("\nsorry there isnt enough %s in the kitchen", name);
 		}
 	}
+	else
+		printf("\nwe dont have %s in the kitchen, sorry!", name);
 }
 
 void CreateTables(Tmanage table_manage,int num)
@@ -36,7 +70,7 @@ void CreateTables(Tmanage table_manage,int num)
 	for (i = 0; i < num; i++)
 	{
 		if (!(temp = (table*)malloc(sizeof(table))))//create a table(link list node)
-			Error_Msg("Could not allocate memory");
+			Error_Msg("\nCould not allocate memory");
 		temp->num = i + 1;//number of table
 		temp->order = NULL;//initialize order to null(no orders on table)
 		temp->next = NULL;//our tail next is always null
@@ -58,7 +92,7 @@ product* Addtotable(Ptable t, char* name, int quantity,int price)
 {
 	product* temp;//make a product
 	if(!(temp=(product*)malloc(sizeof(product))))
-		Error_Msg("couldnt add product to table");
+		Error_Msg("\ncouldnt add product to table");
 	temp->quantity=quantity;//updates it quantity 
 	temp->price=price;//update its price
 	if(!(temp->name=(char*)malloc(sizeof(char)*strlen(name+1))))
@@ -71,16 +105,18 @@ void AddItems(Pmanage kitchen, char* name, int quantity)
 {
 	product* temp;
 	temp = kitchen->head;//pointer to move in the list
-	if (check_name(kitchen, name))//check if our name is ok(in the list)
+	if (!check_name(kitchen, name))//check if our name is ok(in the list)
 	{
 		if (check_quantity(quantity))//check if our quantity is ok(not negative)
 		{
 			while (!strcmp(temp->name, name))//loop till you reach the name we want to update its quantity
 				temp = temp->next;
 			temp->quantity = quantity;//update quantity
-			printf("%d %s were added to the kitchen", quantity, name);
+			printf("\n%d %s were added to the kitchen", quantity, name);
 		}
-	}	
+	}
+	else
+		printf("We dont have %s in our kitchen,sorry", name);
 }
 void CreateProducts(FILE* in, Pmanage kitchen)
 {
@@ -91,16 +127,16 @@ void CreateProducts(FILE* in, Pmanage kitchen)
 	kitchen->size = 0;
 	//allocate memory and check if it's valid
 	if(!(temp=(product*)malloc(sizeof(product))))
-		Error_Msg("Could not allocate memory");
+		Error_Msg("\nCould not allocate memory");
 	while (fscanf(in, "%s %d %d", &temp_name, &temp->price, &temp->quantity)!=EOF)//enter info from text file into temp
 	{
-		//check if our name and price and quantity are ok (not equal,not neg) if its ok we add to our link list
+		//check if our name (is NOT in the list) and price and quantity are ok (not equal,not neg) if its ok we add to our link list
 		if (check_name(kitchen, temp_name) && check_price(temp->price) && check_quantity(temp->quantity))
 		{
 
 			if (!(temp->name = (char*)malloc(strlen(temp_name) + 1 * sizeof(char))))
 			{
-				Error_Msg("Could not allocate memory");
+				Error_Msg("\nCould not allocate memory");
 				if (kitchen->size > 0)//only free memory if we have allocated memory
 					DeleteProducts(kitchen);
 			}
@@ -116,19 +152,19 @@ void CreateProducts(FILE* in, Pmanage kitchen)
 		//create new temp for next item
 		if (!(temp = (product*)malloc(sizeof(product))))
 		{
-			Error_Msg("Could not allocate memory");
+			Error_Msg("\nCould not allocate memory");
 			DeleteProducts(kitchen);
 		}
 	}
 	free(temp);//free the one extra temp we have allocated
 	//printf("All products have been registered");//CHECK IF WE NEED TO THROW THE PROGRAM IF PRODUCT IS NOT OK?
-	printf("The kitchen has been created");
+	printf("\nThe kitchen has been created");
 }
 int check_price(int price)
 {
 	if (price <= 0)
 	{
-		Error_Msg("Price cannot be negative");
+		Error_Msg("\nPrice cannot be negative");
 		return 0;//return 0 if price is negative
 	}
 	return 1;//return 1 if price is positive
@@ -137,9 +173,10 @@ int check_price(int price)
 int check_quantity(int q)
 {
 	if (q>0) return 1;//return 1 if quantity is valid
-	Error_Msg("quantity isnt valid");
+	Error_Msg("\nquantity isnt valid");
 	return 0;
 }
+
 int check_name(Pmanage kitchen,char* name)
 {
 	product* temp;
@@ -149,11 +186,11 @@ int check_name(Pmanage kitchen,char* name)
 		if (strcmp(temp->name, name) == 0)
 		{
 			return 0;//return 0 if strings are identical
-			Error_Msg("We dont have %s ,sorry :(",name);
+			
 		}
 	temp = temp->next;
 	}
-	 return 1;//return 1- if the name doesnt exist
+	 return 1;//return 1 if the name doesnt exist
 }
 void Error_Msg(char* s)
 {

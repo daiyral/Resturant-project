@@ -2,7 +2,7 @@
 void main()
 {
 	int func,tables,new_quantity,table_num;
-	char* name;
+	char* name[50];
 	product_manage kitchen;
 	table_manage table_manager;
 	FILE* manot,*instructions;
@@ -12,12 +12,12 @@ void main()
 		Error_Msg("Could not open file");
 	fscanf(instructions, "%d", &tables);//get amount of tables
 	CreateTables(&table_manager, tables);//create link list of tables
-	while (fscanf(instructions, "%d", &func!=EOF))//get what function to start
+	while (fscanf(instructions, "%d", &func)!=EOF)//get what function to start
 	{
 		switch (func)
 		{
 		case 1://create products link list
-			CreateProducts(manot, &table_manager);
+			CreateProducts(manot, &kitchen);
 			break;
 
 		case 2:
