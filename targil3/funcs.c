@@ -3,26 +3,40 @@
 void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity)
 {
 	Ptable tempT;
-	product* tempP, *todelete,*before;
+	product* tempP,*before,*todelete;
 	tempT = table_manage->head;//set a pointer to our table
 	while (tempT->num != table_number)//find the table that wants to remove an item
 		tempT = tempT->next;
 	tempP = tempT->order;//set our pointer to the head of the items we have on the table
+	before = tempP;//initilize before to point to our head
+	if (tempP->name == NULL)//check if theres any items on the table
+	{
+		printf("There is nothing on the table");
+		return;
+	}
 	while (strcmp(tempP->name, name) != 0)//find the item BEFORE the one we want to delete
 	{
-		before = tempP;//WE STOPPED HERE 
+		before = tempP;
 		tempP = tempP->next;
+		if(tempP->name==NULL)//if we got a name that isnt on the table
+		{
+			printf("%s is not on table", name);
+			return;
+		}
 	}
-	if (quantity <= tempP->next->quantity)//check if the amount of quantity exists on the table
+	if (quantity <= tempP->quantity)//check if the amount of quantity exists on the table
 	{
-		tempT->price -= tempP->next->price * quantity;//update the tables price
-		tempP->next->quantity -= quantity;//update the quantity of the order on the table
+		tempT->price -= tempP->price * quantity;//update the tables price
+		tempP->quantity -= quantity;//update the quantity of the order on the table
 		if (tempP->quantity == 0)//check if they returened all the orders of said item
 		{
-			todelete = tempP->next;//set to delete to what we want to remove
-			tempP->next = todelete ->next;//
-			free(todelete);
-
+			todelete = tempP;
+			if (todelete == tempT->order)//if the item to delete is the head of our link list
+				tempT->order = todelete->next;
+			else//if the item to delete is not the head of the list
+				before->next = todelete->next;//attach to the item after the item we delete
+			free(todelete);//free the item that we are set to delete
+			printf("%d %s was returned to the kitchen from table number %d", quantity, name,table_number);
 		}
 	}
 	else
@@ -49,7 +63,7 @@ void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* na
 				//add products to the table(link list) in the style of head of list
 				new_product->next = tempT->order;
 				tempT->order = new_product;
-				tempT->price = new_product->price * new_product->quantity;//update the total price on the table
+				tempT->price += new_product->price * new_product->quantity;//update the total price on the table
 				tempP->quantity -= quantity;//update the quantity of the item in our kitchen
 				printf("\n%d %s were added to table number %d", quantity, name, table_number);
 			}
@@ -74,6 +88,7 @@ void CreateTables(Tmanage table_manage,int num)
 		temp->num = i + 1;//number of table
 		temp->order = NULL;//initialize order to null(no orders on table)
 		temp->next = NULL;//our tail next is always null
+		temp->price = 0;
 		if (table_manage->head == NULL)//if its the first item in link list
 		{
 			table_manage->head = temp;//make it first item
@@ -109,9 +124,9 @@ void AddItems(Pmanage kitchen, char* name, int quantity)
 	{
 		if (check_quantity(quantity))//check if our quantity is ok(not negative)
 		{
-			while (!strcmp(temp->name, name))//loop till you reach the name we want to update its quantity
+			while (strcmp(temp->name, name)!=0)//loop till you reach the name we want to update its quantity
 				temp = temp->next;
-			temp->quantity = quantity;//update quantity
+			temp->quantity += quantity;//update quantity
 			printf("\n%d %s were added to the kitchen", quantity, name);
 		}
 	}

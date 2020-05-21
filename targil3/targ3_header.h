@@ -40,7 +40,8 @@ int check_price(int price);//this function checks that price is not negative
 void CreateProducts(FILE*,Pmanage kitchen);//this functions creates a link list of products from a txt file
 void DeleteProducts(Pmanage kitchen);//this functions deletes our link list
 void Error_Msg(char* s);//this functions prints out an error msg and exits the program
-void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* name, int quantity);
-void CreateTables(Tmanage table_manage, int num);
-product* Addtotable(Ptable t, char* name, int quantity,int price);
+void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* name, int quantity);//add an item to our table
+void CreateTables(Tmanage table_manage, int num);//create table link list
+product* Addtotable(Ptable t, char* name, int quantity,int price);//creates a product that we add to our table
+void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity);//remove an item from the table
 #endif

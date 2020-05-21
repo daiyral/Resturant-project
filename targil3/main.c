@@ -31,6 +31,8 @@ void main()
 			break;
 
 		case 4:
+			fscanf(instructions, "%d %s %d", &table_num, name, &new_quantity);
+			RemoveItem(&table_manager, table_num, name, new_quantity);
 			break;
 
 		case 5:
