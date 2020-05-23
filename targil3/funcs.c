@@ -1,9 +1,93 @@
 #include "targ3_header.h"
-
-void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity)
+void Free_kitchen(Pmanage kitchen)
+{
+	product* tempP;
+	while(kitchen->head!=NULL)
+	{
+		tempP=kitchen->head;//set to head
+		kitchen->head = kitchen->head->next;//advance head
+		free(tempP->name);//free products name
+		free(tempP);//free the product
+	}
+}
+void FreeTable(Tmanage table_manage)
 {
 	Ptable tempT;
+	while (table_manage->head != NULL)
+	{
+		tempT = table_manage->head;//set tempT to be our head so we can delete it
+		table_manage->head = table_manage->head->next;//move to next item in the list
+		//table_manage->head->before = NULL;//set our before to now be null
+		free(tempT);
+	}
+}
+int RemoveTable(int table_num,Tmanage table_manage,Pmanage kitchen)
+{
+	int max=0,tempTableNum=0,flag = 1;//signals that we are not on the last table
+	char* maxProduct = (char*)malloc(sizeof(char));//name of the product most sold
+	FILE* out;
+	Ptable tempT;
+	product* toDel;
+	product* tempP;
+	if (!(out = fopen("output.txt", "a")))
+	{
+		printf("could not open file");
+		exit(1);
+	}
+	tempT = table_manage->head;
+	tempP = kitchen->head;
+	while (tempT != NULL&&flag)//loop to check if its the last table
+	{
+		if (tempT->order!= NULL ) tempTableNum =tempT->num;//save the table number that a order is in
+		tempT = tempT->next;//move to next table
+	}
+	tempT = table_manage->head;//reset tempT to head
+	while (tempT->num != table_num)//run on our table list until we reach the table to close
+		tempT = tempT->next;
+	if (tempT->num == tempTableNum) flag = 0;//FLAG DOESNT WORK ON ORDERS ON LAST TABLES (TABLE 15 FOR EXAMPLE)
+	if (tempT->order != NULL)
+	{
+		fprintf(out, "\nThe items ordered are:");
+		while (tempT->order != NULL)
+		{
+			fprintf(out, "%d %s\n", tempT->order->quantity, tempT->order->name);//print the items on the table
+			toDel = tempT->order;//save the head of order list
+			tempT->order = tempT->order->next;//move head to next product
+			free(toDel->name);//THIS DIDNT WORK :(
+			free(toDel);//free the dish
+		}
+		fprintf(out, "The total price is:%d,please", tempT->price);//print total price
+		if (!flag)//if it is the last table
+		{
+			while (tempP != NULL)
+			{
+				if (tempP->daily_sales > max)
+				{
+					max = tempP->daily_sales;//update the max sold item
+					if (*(maxProduct = (char*)realloc(maxProduct, (strlen(tempP->name + 1) * sizeof(char)))))//realocate memory according for the name of the most sold dish
+						Error_Msg("Couldn't allocate memory");
+					strcpy(maxProduct, tempP->name);
+				}
+			}
+			fprintf(out, "the most popular dish today is %s (was orderd %d times) ", maxProduct, max);
+			free(maxProduct);
+		}
+	}
+	else
+		fprintf(out, "\nThe table number %d is not ordered yet", table_num);
+	fclose(out);
+	return flag;//return flag to check if we have reached the last table
+}
+void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity)
+{
+	FILE* out;
+	Ptable tempT;
 	product* tempP,*before,*todelete;
+	if(!(out=fopen("output.txt","a")))
+	{
+		printf("couldnt open out file");
+		exit(1);
+	}
 	tempT = table_manage->head;//set a pointer to our table
 	while (tempT->num != table_number)//find the table that wants to remove an item
 		tempT = tempT->next;
@@ -11,7 +95,7 @@ void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity
 	before = tempP;//initilize before to point to our head
 	if (tempP->name == NULL)//check if theres any items on the table
 	{
-		printf("There is nothing on the table");
+		fprintf(out,"\nThere is nothing on the table");
 		return;
 	}
 	while (strcmp(tempP->name, name) != 0)//find the item BEFORE the one we want to delete
@@ -20,7 +104,7 @@ void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity
 		tempP = tempP->next;
 		if(tempP->name==NULL)//if we got a name that isnt on the table
 		{
-			printf("%s is not on table", name);
+			fprintf(out,"\n%s is not on table", name);
 			return;
 		}
 	}
@@ -35,17 +119,26 @@ void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity
 				tempT->order = todelete->next;
 			else//if the item to delete is not the head of the list
 				before->next = todelete->next;//attach to the item after the item we delete
+			free(todelete->name);
 			free(todelete);//free the item that we are set to delete
-			printf("%d %s was returned to the kitchen from table number %d", quantity, name,table_number);
+			
 		}
+		fprintf(out,"\n%d %s was returned to the kitchen from table number %d", quantity, name, table_number);
 	}
 	else
-		printf("there isnt %d %s on the table", quantity, name);	
+		fprintf(out,"\nthere isnt %d %s on the table", quantity, name);
+	fclose(out);
 }
 
 
 void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* name, int quantity)
 {
+	FILE* out;
+	if(!(out=fopen("output.txt","a")))
+	{
+		printf("couldnt open out file");
+		exit(1);
+	}
 	product* tempP, * new_product;//tempP will point the kitchen list
 	Ptable tempT = table_manage->head;//tempT will point to table list
 	tempP = kitchen->head;
@@ -60,18 +153,21 @@ void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* na
 				while (tempT->num != table_number)//run on all the tabels till we find the table with same serial number
 					tempT = tempT->next;//go to next table
 				new_product = Addtotable(tempT, tempP->name, quantity, tempP->price);//recieve junction of what we put on the table 
+				tempP->daily_sales += quantity;//update the amount of times and item has been sold
 				//add products to the table(link list) in the style of head of list
 				new_product->next = tempT->order;
 				tempT->order = new_product;
 				tempT->price += new_product->price * new_product->quantity;//update the total price on the table
 				tempP->quantity -= quantity;//update the quantity of the item in our kitchen
-				printf("\n%d %s were added to table number %d", quantity, name, table_number);
+				fprintf(out,"\n%d %s were added to table number %d", quantity, name, table_number);
 			}
-			printf("\nsorry there isnt enough %s in the kitchen", name);
+			else
+			fprintf(out,"\nsorry there isnt enough %s in the kitchen", name);
 		}
 	}
 	else
-		printf("\nwe dont have %s in the kitchen, sorry!", name);
+		fprintf(out,"\nwe dont have %s in the kitchen, sorry!", name);
+	fclose(out);
 }
 
 void CreateTables(Tmanage table_manage,int num)
@@ -111,14 +207,20 @@ product* Addtotable(Ptable t, char* name, int quantity,int price)
 	temp->quantity=quantity;//updates it quantity 
 	temp->price=price;//update its price
 	if(!(temp->name=(char*)malloc(sizeof(char)*strlen(name+1))))
-		Error_Msg("couldnt add new product name to table");
+		Error_Msg("\ncouldnt add new product name to table");
 	strcpy(temp->name,name);
 	return temp;
 }
 
 void AddItems(Pmanage kitchen, char* name, int quantity)
 {
+	FILE* out;
 	product* temp;
+	if (!(out = fopen("output.txt", "a")))
+	{
+		fprintf(out,"Could not open file");
+		exit(1);
+	}
 	temp = kitchen->head;//pointer to move in the list
 	if (!check_name(kitchen, name))//check if our name is ok(in the list)
 	{
@@ -127,28 +229,33 @@ void AddItems(Pmanage kitchen, char* name, int quantity)
 			while (strcmp(temp->name, name)!=0)//loop till you reach the name we want to update its quantity
 				temp = temp->next;
 			temp->quantity += quantity;//update quantity
-			printf("\n%d %s were added to the kitchen", quantity, name);
+			fprintf(out,"\n%d %s were added to the kitchen", quantity, name);
 		}
 	}
 	else
-		printf("We dont have %s in our kitchen,sorry", name);
+		fprintf(out,"\nWe dont have %s in our kitchen,sorry", name);
+	fclose(out);
 }
 void CreateProducts(FILE* in, Pmanage kitchen)
 {
 	product* temp;
+	FILE *out;
 	char temp_name[50];
+	if (!(out = fopen("output.txt", "a")))
+	{
+		printf("couldnt open output file");
+		exit(1);
+	}
 	kitchen->head = NULL;
 	kitchen->tail = NULL;
 	kitchen->size = 0;
-	//allocate memory and check if it's valid
 	if(!(temp=(product*)malloc(sizeof(product))))
-		Error_Msg("\nCould not allocate memory");
-	while (fscanf(in, "%s %d %d", &temp_name, &temp->price, &temp->quantity)!=EOF)//enter info from text file into temp
+		Error_Msg("Could not allocate memory");
+	while (fscanf(in, "%s %d %d", temp_name, &temp->price, &temp->quantity)!=EOF)//enter info from text file into temp
 	{
 		//check if our name (is NOT in the list) and price and quantity are ok (not equal,not neg) if its ok we add to our link list
 		if (check_name(kitchen, temp_name) && check_price(temp->price) && check_quantity(temp->quantity))
 		{
-
 			if (!(temp->name = (char*)malloc(strlen(temp_name) + 1 * sizeof(char))))
 			{
 				Error_Msg("\nCould not allocate memory");
@@ -156,6 +263,7 @@ void CreateProducts(FILE* in, Pmanage kitchen)
 					DeleteProducts(kitchen);
 			}
 			strcpy(temp->name, temp_name);//move our temp_name into a product
+			temp->daily_sales = 0;
 			temp->next = NULL;//the item we add is always last
 			if (kitchen->head == NULL)//if its the first item
 				kitchen->head = temp;
@@ -172,8 +280,8 @@ void CreateProducts(FILE* in, Pmanage kitchen)
 		}
 	}
 	free(temp);//free the one extra temp we have allocated
-	//printf("All products have been registered");//CHECK IF WE NEED TO THROW THE PROGRAM IF PRODUCT IS NOT OK?
-	printf("\nThe kitchen has been created");
+	fprintf(out,"The kitchen has been created");
+	fclose(out);
 }
 int check_price(int price)
 {
@@ -188,7 +296,7 @@ int check_price(int price)
 int check_quantity(int q)
 {
 	if (q>0) return 1;//return 1 if quantity is valid
-	Error_Msg("\nquantity isnt valid");
+	Error_Msg("\nquantity isn't valid");
 	return 0;
 }
 
@@ -209,7 +317,14 @@ int check_name(Pmanage kitchen,char* name)
 }
 void Error_Msg(char* s)
 {
-	printf("%s",s);
+	FILE* out;
+	if (!(out = fopen("output.txt", "a")))
+	{
+		printf("Could not open file");
+		exit(1);
+	}
+	fprintf(out,"\n%s",s);
+	fclose(out);
 	exit(1);
 }
 void DeleteProducts(Pmanage kitchen)
@@ -217,8 +332,9 @@ void DeleteProducts(Pmanage kitchen)
 	product* temp;
 	while (kitchen->head != NULL)
 	{
-		temp = kitchen->head;
-		kitchen->head = kitchen->head->next;
-		free(temp);
+		temp = kitchen->head;//set temp to head
+		kitchen->head = kitchen->head->next;//move head
+		free(temp->name);//free the name
+		free(temp);//free head
 	}
 }

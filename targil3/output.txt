@@ -1,0 +1,6 @@
+The kitchen has been created
+4 Pasta were added to the kitchen
+we dont have Falafel in the kitchen, sorry!
+4 Pasta were added to table number 5
+1 Pasta was returned to the kitchen from table number 5
+The table number 1 is not ordered yet

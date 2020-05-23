@@ -7,6 +7,7 @@ typedef struct product
 	char* name;
 	int price;
 	int quantity;
+	int daily_sales;
 	struct product* next;
 }product;
 
@@ -44,4 +45,8 @@ void OrderItem(Tmanage table_manage, Pmanage kitchen, int table_number, char* na
 void CreateTables(Tmanage table_manage, int num);//create table link list
 product* Addtotable(Ptable t, char* name, int quantity,int price);//creates a product that we add to our table
 void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity);//remove an item from the table
+void Free_kitchen(Pmanage kitchen);//free the memory of the products invetory list
+void FreeTable(Tmanage table_manage);//free the memory of all tables
+int RemoveTable(int table_num, Tmanage table_manage, Pmanage kitchen);//get bill for a table ,return if its last table
+
 #endif
