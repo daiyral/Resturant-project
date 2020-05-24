@@ -2,7 +2,7 @@
 void main()
 {
 	int func,tables,new_quantity,table_num,last_table;
-	char* name[50];
+	char name[50];
 	product_manage kitchen;
 	table_manage table_manager;
 	FILE* manot,*instructions;
@@ -34,7 +34,7 @@ void main()
 		case 5:
 			fscanf(instructions, "%d", &table_num);
 			last_table = RemoveTable(table_num, &table_manager, &kitchen);//last_table checks if we are on the last table. recieve 0 if its the last table recieve 1 if its not 
-			if (!last_table)//when its last table free the memory of the lists
+			if (last_table)//when its last table free the memory of the lists
 			{
 				FreeTable(&table_manager);//free all the tables
 				Free_kitchen(&kitchen);//free everything in the kitchen
@@ -42,6 +42,5 @@ void main()
 			break;
 		}
 	}
-	printf("DONE");
 }
 

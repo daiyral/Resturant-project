@@ -21,9 +21,21 @@ void FreeTable(Tmanage table_manage)
 		free(tempT);
 	}
 }
+int check_last_order(Tmanage table_manage)
+{
+	int cnt=0;
+	Ptable check;
+	check= table_manage->head;
+	while (check != NULL)
+	{
+		if (check->order != NULL)cnt++;//count how many orders are left
+		check = check->next;
+	}
+	return cnt == 1 ? 1 : 0;//if theres only order left  return10 else return 0
+}
 int RemoveTable(int table_num,Tmanage table_manage,Pmanage kitchen)
 {
-	int max=0,tempTableNum=0,flag = 1;//signals that we are not on the last table
+	int max=0,tempTableNum=0,flag = 0;//signals that we are not on the last table
 	char* maxProduct = (char*)malloc(sizeof(char));//name of the product most sold
 	FILE* out;
 	Ptable tempT;
@@ -36,44 +48,38 @@ int RemoveTable(int table_num,Tmanage table_manage,Pmanage kitchen)
 	}
 	tempT = table_manage->head;
 	tempP = kitchen->head;
-	while (tempT != NULL&&flag)//loop to check if its the last table
-	{
-		if (tempT->order!= NULL ) tempTableNum =tempT->num;//save the table number that a order is in
-		tempT = tempT->next;//move to next table
-	}
-	tempT = table_manage->head;//reset tempT to head
 	while (tempT->num != table_num)//run on our table list until we reach the table to close
 		tempT = tempT->next;
-	if (tempT->num == tempTableNum) flag = 0;//FLAG DOESNT WORK ON ORDERS ON LAST TABLES (TABLE 15 FOR EXAMPLE)
-	if (tempT->order != NULL)
+	if (tempT->order != NULL)//check if the table has an order 
 	{
-		fprintf(out, "\nThe items ordered are:");
+		flag = check_last_order(table_manage);//now that we know the table we recieved is not null we will check if its the last order
 		while (tempT->order != NULL)
 		{
-			fprintf(out, "%d %s\n", tempT->order->quantity, tempT->order->name);//print the items on the table
 			toDel = tempT->order;//save the head of order list
+			fprintf(out, "\n%d %s. ", toDel->quantity, toDel->name);//print the items on the table
 			tempT->order = tempT->order->next;//move head to next product
-			free(toDel->name);//THIS DIDNT WORK :(
+			free(toDel->name);
 			free(toDel);//free the dish
 		}
-		fprintf(out, "The total price is:%d,please", tempT->price);//print total price
-		if (!flag)//if it is the last table
+		fprintf(out, "The total price is:%d NIS,please", tempT->price);//print total price
+		if (flag)//if it is the last table
 		{
 			while (tempP != NULL)
 			{
 				if (tempP->daily_sales > max)
 				{
 					max = tempP->daily_sales;//update the max sold item
-					if (*(maxProduct = (char*)realloc(maxProduct, (strlen(tempP->name + 1) * sizeof(char)))))//realocate memory according for the name of the most sold dish
+					if (!(maxProduct = (char*)realloc(maxProduct, (strlen(tempP->name)+1 * sizeof(char)))))//realocate memory according for the name of the most sold dish
 						Error_Msg("Couldn't allocate memory");
 					strcpy(maxProduct, tempP->name);
 				}
+				tempP = tempP->next;
 			}
-			fprintf(out, "the most popular dish today is %s (was orderd %d times) ", maxProduct, max);
+			fprintf(out,"\nthe most popular dish today is %s (was orderd %d times) ", maxProduct, max);
 			free(maxProduct);
 		}
 	}
-	else
+	else//table doesnt have an order
 		fprintf(out, "\nThe table number %d is not ordered yet", table_num);
 	fclose(out);
 	return flag;//return flag to check if we have reached the last table
@@ -93,7 +99,7 @@ void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity
 		tempT = tempT->next;
 	tempP = tempT->order;//set our pointer to the head of the items we have on the table
 	before = tempP;//initilize before to point to our head
-	if (tempP->name == NULL)//check if theres any items on the table
+	if (tempP == NULL)//check if theres any items on the table
 	{
 		fprintf(out,"\nThere is nothing on the table");
 		return;
@@ -206,7 +212,7 @@ product* Addtotable(Ptable t, char* name, int quantity,int price)
 		Error_Msg("\ncouldnt add product to table");
 	temp->quantity=quantity;//updates it quantity 
 	temp->price=price;//update its price
-	if(!(temp->name=(char*)malloc(sizeof(char)*strlen(name+1))))
+	if(!(temp->name=(char*)malloc(sizeof(char)+1*strlen(name))))
 		Error_Msg("\ncouldnt add new product name to table");
 	strcpy(temp->name,name);
 	return temp;

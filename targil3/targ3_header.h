@@ -2,6 +2,8 @@
 #define _targ3_header
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 typedef struct product
 {
 	char* name;
@@ -48,5 +50,5 @@ void RemoveItem(Tmanage table_manage, int table_number, char* name, int quantity
 void Free_kitchen(Pmanage kitchen);//free the memory of the products invetory list
 void FreeTable(Tmanage table_manage);//free the memory of all tables
 int RemoveTable(int table_num, Tmanage table_manage, Pmanage kitchen);//get bill for a table ,return if its last table
-
+int check_last_order(Tmanage table_manage);//this function checks if we only have 1 table remaining with an order
 #endif
