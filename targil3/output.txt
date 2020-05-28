@@ -1,35 +1,10 @@
-Price cannot be negative
-quantity isn't valid
 The kitchen has been created
 4 Pasta were added to the kitchen
-We dont have Bamba in our kitchen,sorry
 we dont have Falafel in the kitchen, sorry!
 4 Pasta were added to table number 5
-8 Steak were added to table number 7
-quantity isn't valid
-5 Steak were added to table number 1
-2 Fish were added to table number 5
-7 Fish were added to table number 6
-1 Fish were added to table number 1
-we dont have Bamba in the kitchen, sorry!
-1 Steak was returned to the kitchen from table number 1
 1 Pasta was returned to the kitchen from table number 5
-Cake is not on table
-There is nothing on the table
-The bill on table 1 is:
-1 Fish. 
-4 Steak. 
-The total price is:134 NIS,please
-The table number 2 is not ordered yet
+The table number 1 is not ordered yet
 The bill on table 5 is:
-2 Fish. 
 3 Pasta. 
-The total price is:86 NIS,please
-The bill on table 7 is:
-8 Steak. 
-The total price is:248 NIS,please
-The table number 3 is not ordered yet
-The bill on table 6 is:
-7 Fish. 
-The total price is:70 NIS,please
-the most popular dish today is Steak (was orderd 13 times)
+The total price is:90 NIS,please
+the most popular dish today is Pasta (was orderd 4 times)

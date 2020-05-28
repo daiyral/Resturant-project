@@ -281,7 +281,7 @@ void CreateProducts(FILE* in, Pmanage kitchen)
 		Error_Msg("Could not allocate memory");
 		exit(1);
 	}
-	while (fscanf(in, "%s %d %d", temp_name, &temp->price, &temp->quantity)!=EOF)//enter info from text file into temp
+	while (fscanf(in, "%s %d %d", temp_name, &temp->quantity, &temp->price)!=EOF)//enter info from text file into temp
 	{
 		//check if our name (is NOT in the list) and price and quantity are ok (not equal,not neg) if its ok we add to our link list
 		if (check_name(kitchen, temp_name) && check_price(temp->price) && check_quantity(temp->quantity))
