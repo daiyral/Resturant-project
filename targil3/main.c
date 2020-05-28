@@ -42,5 +42,7 @@ void main()
 			break;
 		}
 	}
+	fclose(manot);
+	fclose(instructions);
 }
 
